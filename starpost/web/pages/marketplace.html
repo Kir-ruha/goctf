@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Маркетплейс — Starpost</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/marketplace.css">
+  <style>
+    .mp-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    .mp-head h1 { margin-bottom: 0; }
+    .mp-search { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mp-search input { min-width: 240px; max-width: 360px; }
+    .mp-search select { min-width: 160px; }
+    .skeleton-card { height: 440px; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">STARPOST</a>
+    <nav></nav>
+  </header>
+  <main>
+    <div class="mp-head">
+      <div>
+        <p class="eyebrow">ТОРГОВЫЙ КОРИДОР — SP-2049</p>
+        <h1>Маркетплейс</h1>
+        <p data-user class="muted">Гость</p>
+      </div>
+      <div class="mp-search">
+        <input id="q" placeholder="Поиск по названию или описанию" autocomplete="off">
+        <select id="sort"><option value="">Сортировка</option><option value="price_asc">Цена ↑</option><option value="price_desc">Цена ↓</option><option value="new">Новые</option></select>
+      </div>
+    </div>
+    <div id="products" class="grid"></div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    let allProducts = [];
+    let me = null;
+
+    function skeletonHTML(n=6){
+      return Array(n).fill(0).map(()=>`<article class="card product-card"><div class="product-main"><span class="skeleton" style="height:14px;width:40%"></span><span class="skeleton" style="height:18px;width:80%;margin-top:14px"></span><span class="skeleton" style="height:12px;width:90%;margin-top:10px"></span><span class="skeleton" style="height:22px;width:80px;margin-top:16px"></span></div><footer class="card-reviews"><span class="skeleton" style="height:12px;width:50%"></span></footer></article>`).join('');
+    }
+
+    function render(list){
+      const el = document.getElementById('products');
+      if(!list.length){ el.innerHTML = `<div class="empty" style="grid-column:1/-1"><h2>Ничего не найдено</h2><p class="muted">Попробуйте изменить запрос или сбросить фильтры.</p></div>`; return; }
+      el.innerHTML = list.map(product => `
+        <article class="card product-card">
+          <div class="product-main">
+            <small>${esc(product.seller)}</small>
+            <h3><a class="product-link" href="/product/?id=${product.id}">${esc(product.name)}</a></h3>
+            <p class="muted">${esc(product.description)}</p>
+            <p class="price">${product.price} cr</p>
+            <div class="actions"><a class="button secondary" href="/product/?id=${product.id}">Подробнее</a>${me?.role === 'buyer' ? `<button onclick="cart(${product.id})">В корзину</button><button onclick="buy(${product.id})">Купить</button>` : ''}</div>
+          </div>
+          <footer class="card-reviews">
+            <div class="reviews-title"><b>Отзывы покупателей</b><span>${product.review_count}</span></div>
+            ${product.reviews.length ? product.reviews.map(review => `
+              <div class="public-review">
+                <div><b>${esc(review.buyer)}</b><span class="stars">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</span></div>
+                <p>${esc(review.body)}</p>
+              </div>`).join('') : `<p class="muted">Пока нет открытых отзывов.</p>`}
+            ${product.review_count > product.reviews.length ? `<small class="muted">Показаны последние ${product.reviews.length} из ${product.review_count}</small>` : ''}
+          </footer>
+        </article>`).join('');
+    }
+
+    function filtered(){
+      const q = document.getElementById('q').value.trim().toLowerCase();
+      const sort = document.getElementById('sort').value;
+      let list = q ? allProducts.filter(p => (p.name+' '+p.description+' '+p.seller).toLowerCase().includes(q)) : [...allProducts];
+      if(sort==='price_asc') list.sort((a,b)=>a.price-b.price);
+      if(sort==='price_desc') list.sort((a,b)=>b.price-a.price);
+      if(sort==='new') list.sort((a,b)=>b.id-a.id);
+      render(list);
+    }
+
+    async function run() {
+      document.getElementById('products').innerHTML = skeletonHTML();
+      me = await optionalUser();
+      const rows = await api('/api/products');
+      allProducts = rows;
+      render(rows);
+      document.getElementById('q').addEventListener('input', filtered);
+      document.getElementById('sort').addEventListener('change', filtered);
+    }
+
+    async function cart(id) {
+      try { await api('/api/cart',{method:'POST',body:JSON.stringify({product_id:id})}); notify('Товар добавлен в корзину'); } catch(e){ notify(e.message,'error'); }
+    }
+    async function buy(id) {
+      try { await api(`/api/products/${id}/buy`,{method:'POST',body:'{}'}); location.href='/orders/'; } catch(e){ notify(e.message,'error'); }
+    }
+    run();
+  </script>
+</body>
+</html>

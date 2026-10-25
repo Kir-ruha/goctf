@@ -1,0 +1,73 @@
+name: starpost.yml
+
+services:
+  web:
+    restart: unless-stopped
+    build: ./web
+    pids_limit: 256
+    mem_limit: 64M
+    cpus: 0.25
+    ports:
+      - 8090:80
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    restart: unless-stopped
+    build: ./api
+    pids_limit: 256
+    mem_limit: 256M
+    cpus: 1.0
+    volumes:
+      - ./contracts:/contracts
+    environment:
+      - DATABASE_URL=postgresql://starpost:starpost@postgres/starpost
+      - SECRET_KEY=starpost-development-session-key-change-before-production
+      - WAREHOUSE_URL=http://warehouse:6000
+      - WAREHOUSE_CALLBACK_TOKEN=starpost-warehouse-callback-token
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=2)"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  warehouse:
+    restart: unless-stopped
+    build: ./warehouse
+    pids_limit: 128
+    mem_limit: 64M
+    cpus: 0.25
+    environment:
+      - WAREHOUSE_API_URL=http://api:5000
+      - WAREHOUSE_CALLBACK_TOKEN=starpost-warehouse-callback-token
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:6000/health', timeout=2)"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    pids_limit: 256
+    mem_limit: 256M
+    cpus: 0.5
+    environment:
+      - POSTGRES_DB=starpost
+      - POSTGRES_USER=starpost
+      - POSTGRES_PASSWORD=starpost
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U starpost -d starpost && psql -U starpost -d starpost -tAc 'SELECT 1 FROM users LIMIT 1' >/dev/null"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

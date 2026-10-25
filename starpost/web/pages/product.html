@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Товар — Starpost</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/marketplace.css">
+  <style>
+    .purchase-panel { position: sticky; top: 82px; }
+    .purchase-panel button { width: 100%; }
+    .rating-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; background: #0c1913; border: 1px solid var(--line); font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">STARPOST</a>
+    <nav></nav>
+  </header>
+  <main>
+    <a class="muted" href="/marketplace/" style="display:inline-block;margin-bottom:18px">← Вернуться в каталог</a>
+    <section id="product" class="product-detail"><p class="muted">Загрузка карточки…</p></section>
+    <section class="detail-reviews">
+      <p class="eyebrow">ОТКРЫТЫЙ КАНАЛ ПОКУПАТЕЛЕЙ</p>
+      <h2>Отзывы о товаре</h2>
+      <div id="reviews"></div>
+    </section>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    let productId;
+    async function load() {
+      productId = Number(new URLSearchParams(location.search).get('id'));
+      if (!Number.isInteger(productId) || productId < 1) {
+        document.getElementById('product').innerHTML = `<p class="muted">Некорректный идентификатор товара.</p>`;
+        return;
+      }
+      try {
+        const [product, me] = await Promise.all([api(`/api/products/${productId}`), optionalUser()]);
+        document.title = `${product.name} — Starpost`;
+        document.getElementById('product').innerHTML = `
+          <div>
+            <p class="eyebrow">ГРУЗ #${product.id}</p>
+            <h1>${esc(product.name)}</h1>
+            <p class="lead">${esc(product.description)}</p>
+            <dl class="product-meta">
+              <div><dt>Станция-продавец</dt><dd>${esc(product.seller)}</dd></div>
+              <div><dt>Регистрационный номер</dt><dd>${esc(product.seller_tax_id)}</dd></div>
+              <div><dt>Рейтинг</dt><dd><span class="rating-badge">★ ${product.rating} · ${product.review_count} отзывов</span></dd></div>
+            </dl>
+          </div>
+          <aside class="purchase-panel">
+            <small style="color:var(--dim);font:700 .68rem 'JetBrains Mono',monospace;letter-spacing:.12em">СТОИМОСТЬ ДОСТАВКИ ВКЛЮЧЕНА</small>
+            <p class="price">${product.price} cr</p>
+            ${me?.role === 'buyer' ? `<button onclick="addToCart()">Добавить в корзину</button><button class="secondary" onclick="buyNow()">Купить сейчас</button>` : `<p class="muted">Войдите как покупатель для заказа.</p>`}
+          </aside>`;
+        document.getElementById('reviews').innerHTML = product.reviews.length ? product.reviews.map(r=>`
+          <article class="detail-review"><div><b>${esc(r.buyer)}</b><span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></div><p>${esc(r.body)}</p><small class="muted">${new Date(r.created_at).toLocaleDateString('ru-RU')}</small></article>`).join('') : `<p class="muted">Открытых отзывов пока нет — станьте первым.</p>`;
+      } catch (e) { document.getElementById('product').innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
+    }
+    async function addToCart(){ try{ await api('/api/cart',{method:'POST',body:JSON.stringify({product_id:productId})}); location.href='/cart/'; }catch(e){ notify(e.message,'error'); } }
+    async function buyNow(){ try{ await api(`/api/products/${productId}/buy`,{method:'POST',body:'{}'}); location.href='/orders/'; }catch(e){ notify(e.message,'error'); } }
+    load();
+  </script>
+</body>
+</html>

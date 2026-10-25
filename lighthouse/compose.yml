@@ -1,0 +1,15 @@
+name: lighthouse
+
+services:
+  lighthouse:
+    build: .
+    ports:
+      - "8085:8080"
+    volumes:
+      - lighthouse-data:/data
+      - lighthouse-builds:/srv/lighthouse/work
+      - lighthouse-journal:/var/log/lighthouse
+volumes:
+  lighthouse-data:
+  lighthouse-builds:
+  lighthouse-journal:

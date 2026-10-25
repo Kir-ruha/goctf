@@ -1,0 +1,22 @@
+name: orbital_navigation
+
+services:
+  orbital_navigation:
+    build: .
+    restart: unless-stopped
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8080
+      DATA_DIR: /data
+    ports:
+      - "8086:8080"
+    volumes:
+      - orbital-data:/data
+    pids_limit: 256
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+volumes:
+  orbital-data:

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Панель станции | Starpost</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/seller-products.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">STARPOST</a>
+    <nav></nav>
+  </header>
+  <main hidden>
+    <p class="eyebrow">ЦЕНТР УПРАВЛЕНИЯ СТАНЦИИ</p>
+    <h1>Панель продавца</h1>
+    <p data-user class="muted"></p>
+    <form id="product">
+      <h2>Новый груз</h2>
+      <input name="name" placeholder="Название" required>
+      <textarea name="description" placeholder="Публичное описание" required></textarea>
+      <textarea name="cargo" placeholder="Содержимое груза" required></textarea>
+      <input name="price" type="number" min="1" max="1000" placeholder="Цена" required>
+      <button>Опубликовать</button>
+    </form>
+    <h2>Мои товары</h2>
+    <div id="seller-products" class="seller-products"></div>
+    <h2>Продажи</h2><div id="sales"></div>
+    <h2>Отзывы</h2><div id="reviews"></div>
+  </main>
+  <div id="edit-product-modal" class="dialog-backdrop" hidden>
+    <form id="edit-product-form" class="custom-dialog">
+      <p class="eyebrow">РЕДАКТОР КАРТОЧКИ</p><h2>Изменить товар</h2>
+      <input id="edit-name" placeholder="Название" required>
+      <textarea id="edit-description" placeholder="Описание" required></textarea>
+      <input id="edit-price" type="number" min="1" max="1000" placeholder="Цена" required>
+      <div class="dialog-actions"><button type="button" class="ghost-button" id="edit-cancel">Отмена</button><button>Сохранить</button></div>
+    </form>
+  </div>
+  <script src="/common.js"></script>
+  <script>
+    let editedProduct = null;
+    const productStore = new Map();
+    async function load(cursor) {
+      if (!await guard("seller")) return;
+      document.querySelector("main").hidden = false;
+      const reviewsPath = cursor ? `/api/seller/reviews?cursor=${encodeURIComponent(cursor)}` : "/api/seller/reviews";
+      const [products, sales, reviewsData] = await Promise.all([api("/api/seller/products"), api("/api/seller/sales"), api(reviewsPath)]);
+      const reviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData.reviews || []);
+      const nextCursor = reviewsData.next_cursor || "";
+      productStore.clear();
+      products.forEach(product => productStore.set(product.id, product));
+      $("#seller-products").innerHTML = products.map(product => `
+        <article class="seller-product ${product.is_active ? "" : "archived"}">
+          <div><span class="product-state">${product.is_active ? "АКТИВЕН" : "В АРХИВЕ"}</span><h3>${esc(product.name)}</h3><p>${esc(product.description)}</p><small>${product.price} cr · ${product.sales_count} продаж · ${product.income} cr дохода</small></div>
+          <div class="seller-product-actions"><button data-product-action="edit" data-product-id="${product.id}">Изменить</button>${product.is_active ? `<button class="danger" data-product-action="archive" data-product-id="${product.id}">В архив</button>` : `<button data-product-action="restore" data-product-id="${product.id}">Вернуть</button>`}</div>
+        </article>`).join("") || "<p class=muted>Опубликованных товаров пока нет.</p>";
+      $("#sales").innerHTML = `<p class="price">Доход: ${sales.income} cr</p>` + sales.sales.map(x => `<div class="row"><b>${esc(x.name)}</b><span>${esc(x.buyer)} · ${x.price} cr · ${esc(x.status)}</span></div>`).join("");
+      const paging = nextCursor ? `<button id="reviews-more" data-cursor="${esc(nextCursor)}">Показать ещё</button>` : "";
+      $("#reviews").innerHTML = reviews.map(x => `<div class="row ${x.is_private ? "private" : ""}"><div><b>${esc(x.name)} · ${"★".repeat(x.rating)}</b><p>${esc(x.body)}</p></div><small>${x.is_private ? "закрытый" : "открытый"}</small></div>`).join("") || "<p class=muted>Отзывов пока нет.</p>";
+      if (paging) $("#reviews").insertAdjacentHTML("beforeend", paging);
+      const more = $("#reviews-more");
+      if (more) more.onclick = () => load(more.dataset.cursor);
+    }
+
+    $("#seller-products").onclick = event => {
+      const button = event.target.closest("[data-product-action]");
+      if (!button) return;
+      const product = productStore.get(Number(button.dataset.productId));
+      if (button.dataset.productAction === "edit") editProduct(product.id, product);
+      if (button.dataset.productAction === "archive") archiveProduct(product.id);
+      if (button.dataset.productAction === "restore") restoreProduct(product.id, product);
+    };
+
+    async function editProduct(id, product) {
+      editedProduct = {id, ...product};
+      $("#edit-name").value = product.name;
+      $("#edit-description").value = product.description;
+      $("#edit-price").value = product.price;
+      $("#edit-product-modal").hidden = false;
+    }
+
+    async function archiveProduct(id) {
+      if (!await confirmAction("Товар исчезнет из каталога, но история заказов и отзывы сохранятся.", "Убрать товар в архив?")) return;
+      try {
+        await api(`/api/seller/products/${id}`, {method: "DELETE"});
+        notify("Товар перемещен в архив");
+        load();
+      } catch (error) { notify(error.message, "error"); }
+    }
+
+    async function restoreProduct(id, product) {
+      try {
+        await api(`/api/seller/products/${id}`, {method: "PATCH", body: JSON.stringify({name: product.name, description: product.description, price: product.price, is_active: true})});
+        notify("Товар снова опубликован");
+        load();
+      } catch (error) { notify(error.message, "error"); }
+    }
+
+    $("#product").onsubmit = async event => {
+      event.preventDefault();
+      try {
+        await api("/api/products", {method: "POST", body: JSON.stringify(Object.fromEntries(new FormData(event.target)))});
+        event.target.reset();
+        notify("Товар опубликован");
+        load();
+      } catch (error) { notify(error.message, "error"); }
+    };
+
+    $("#edit-cancel").onclick = () => { $("#edit-product-modal").hidden = true; editedProduct = null; };
+    $("#edit-product-modal").onclick = event => { if (event.target.id === "edit-product-modal") $("#edit-cancel").click(); };
+    $("#edit-product-form").onsubmit = async event => {
+      event.preventDefault();
+      if (!editedProduct) return;
+      try {
+        await api(`/api/seller/products/${editedProduct.id}`, {method: "PATCH", body: JSON.stringify({name: $("#edit-name").value, description: $("#edit-description").value, price: Number($("#edit-price").value), is_active: editedProduct.is_active})});
+        $("#edit-product-modal").hidden = true;
+        editedProduct = null;
+        notify("Карточка товара обновлена");
+        load();
+      } catch (error) { notify(error.message, "error"); }
+    };
+
+    load();
+  </script>
+</body>
+</html>

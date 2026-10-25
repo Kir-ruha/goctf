@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Регистрация — Starpost</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .auth-wrap { max-width: 520px; margin: 40px auto; }
+    .auth-card { border: 1px solid var(--line); border-radius: var(--r-lg); background: linear-gradient(145deg,#121f1b,var(--panel)); padding: 36px; box-shadow: var(--shadow-lg); }
+    .auth-card h1 { font-size: 2rem; margin: .1em 0 .4em; }
+    .auth-card form { max-width: none; }
+    .field { display: grid; gap: 6px; }
+    .field label { font: 700 .72rem 'JetBrains Mono', monospace; letter-spacing: .12em; color: var(--dim); text-transform: uppercase; }
+    .pass-row { position: relative; }
+    .pass-row input { padding-right: 80px; }
+    .pass-toggle { position: absolute; right: 6px; top: 6px; bottom: 6px; padding: 0 12px; font-size: .75rem; background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: var(--r-sm); }
+    .pass-toggle:hover { color: var(--ink); background: #ffffff08; transform: none; box-shadow: none; }
+    .role-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .role-switch label { position: relative; display: grid; place-items: center; gap: 4px; padding: 14px 10px; border: 1px solid var(--line); border-radius: var(--r-md); background: #070f0d; cursor: pointer; transition: border-color var(--t), background var(--t); text-align: center; }
+    .role-switch label:has(input:checked) { border-color: var(--acid); background: #b7ff4312; }
+    .role-switch input { position: absolute; opacity: 0; pointer-events: none; }
+    .role-switch b { font-size: .92rem; }
+    .role-switch small { color: var(--dim); font-size: .75rem; }
+    #seller { display: grid; gap: 12px; padding: 18px; border: 1px dashed var(--line2); border-radius: var(--r-md); background: #0c1913; }
+    #seller[hidden] { display: none !important; }
+    .auth-foot { text-align: center; margin-top: 18px; font-size: .88rem; }
+    .auth-foot a { color: var(--acid); text-decoration: none; }
+    .auth-foot a:hover { text-decoration: underline; }
+    .msg { min-height: 1.2em; margin-top: 6px; font-size: .88rem; color: var(--danger); }
+    .msg.ok { color: var(--acid); }
+  </style>
+</head>
+<body data-nav="static">
+  <header><a class="brand" href="/">STARPOST</a><nav><a href="/login/">Войти</a><a href="/marketplace/">Маркетплейс</a></nav></header>
+  <main>
+    <div class="auth-wrap">
+      <p class="eyebrow" style="text-align:center">НОВАЯ УЧЁТНАЯ ЗАПИСЬ — SP-2049</p>
+      <div class="auth-card">
+        <h1>Присоединиться к маршруту</h1>
+        <p class="muted" style="margin-bottom:20px">Создайте аккаунт покупателя или зарегистрируйте станцию-продавца.</p>
+        <form id="register">
+          <div class="field"><label>Позывной</label><input name="username" placeholder="star_rider" required autocomplete="username"></div>
+          <div class="field"><label>Пароль · минимум 8 символов</label><div class="pass-row"><input id="pwd" name="password" type="password" placeholder="••••••••" required autocomplete="new-password"><button type="button" class="pass-toggle" onclick="togglePass('pwd',this)">Показать</button></div></div>
+          <div class="field"><label>Роль</label>
+            <div class="role-switch">
+              <label><input type="radio" name="role" value="buyer" checked><b>Покупатель</b><small>Заказы и отзывы</small></label>
+              <label><input type="radio" name="role" value="seller"><b>Станция</b><small>Продажи и договор</small></label>
+            </div>
+          </div>
+          <div id="seller" hidden>
+            <div class="field"><label>Название компании</label><input name="company_name" placeholder="ООО Северная Орбита"></div>
+            <div class="field"><label>ИНН / регистрационный номер</label><input name="tax_id" placeholder="1000000000"></div>
+            <div class="field"><label>Секретный ключ-подпись для договора</label><textarea name="signature" placeholder="SIGN-... — будет встроена в PDF-договор"></textarea></div>
+          </div>
+          <button style="margin-top:8px;width:100%;padding:14px">Создать учётную запись →</button>
+          <p id="message" class="msg"></p>
+        </form>
+      </div>
+      <p class="auth-foot muted">Уже есть аккаунт? <a href="/login/">Войти</a></p>
+    </div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    function togglePass(id,btn){const i=document.getElementById(id);const h=i.type==='password';i.type=h?'text':'password';btn.textContent=h?'Скрыть':'Показать'}
+    const seller=document.getElementById('seller');
+    document.querySelectorAll('input[name=role]').forEach(r=>r.addEventListener('change',e=>{seller.hidden=e.target.value!=='seller'}));
+    document.getElementById('register').onsubmit=async e=>{
+      e.preventDefault();
+      const m=document.getElementById('message');m.textContent='';m.className='msg';
+      try{const d=Object.fromEntries(new FormData(e.target));const me=await api('/api/register',{method:'POST',body:JSON.stringify(d)});m.textContent='Аккаунт создан ✓';m.className='msg ok';setTimeout(()=>location.href=me.role==='seller'?'/seller/':'/marketplace/',400)}catch(x){m.textContent=x.message}
+    };
+  </script>
+</body>
+</html>

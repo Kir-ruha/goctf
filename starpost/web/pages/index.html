@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Starpost — Орбитальный маркетплейс</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .landing-section { max-width: 1100px; margin: 60px auto 0; padding: 56px 28px 0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+    .stat { text-align: center; padding: 28px 16px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel); }
+    .stat b { display: block; font-size: 2.2rem; color: var(--acid); letter-spacing: -.04em; }
+    .stat small { color: var(--dim); font: 700 .68rem 'JetBrains Mono', monospace; letter-spacing: .14em; text-transform: uppercase; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .step { padding: 26px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel); }
+    .step span { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--acid); color: #0d1a10; font: 900 1rem monospace; margin-bottom: 14px; }
+    .step h3 { margin: 0 0 8px; }
+    .step p { color: var(--dim); font-size: .92rem; line-height: 1.6; }
+    .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+    .cta-row .button { font-size: .95rem; padding: 14px 26px; }
+    .route-info { display: flex; gap: 24px; flex-wrap: wrap; justify-content: space-between; padding: 24px 0; border-top: 1px solid var(--line); margin-top: 60px; color: var(--dim); font-size: .8rem; }
+    .route-info span { font: 700 .7rem 'JetBrains Mono', monospace; color: var(--acid); letter-spacing: .12em; display: block; margin-bottom: 4px; }
+    @media (max-width: 760px) { .stats, .steps { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-nav="static">
+  <header>
+    <a class="brand" href="/">STARPOST <span>ORBITAL MARKET — SP-2049</span></a>
+    <nav>
+      <a href="/marketplace/">Маркетплейс</a>
+      <a href="/account/">Кабинет</a>
+      <a href="/login/">Войти</a>
+      <a class="button" href="/registr/">Регистрация</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">МАРШРУТ SP-2049 · СВЯЗЬ СТАБИЛЬНА</p>
+        <h1>Грузы для жизни<br><i>за пределами Земли.</i></h1>
+        <p class="lead">Покупайте редкие товары у независимых станций. Автономный бот <b>ATLAS-7</b> доставит заказ по орбитальному маршруту — от склада до вашего шлюза.</p>
+        <div class="cta-row">
+          <a class="button" href="/marketplace/">Открыть маркетплейс →</a>
+          <a class="button secondary" href="/registr/">Создать станцию</a>
+        </div>
+      </div>
+      <div class="planet" aria-hidden="true"></div>
+    </section>
+
+    <div class="stats">
+      <div class="stat"><b>8090</b><small>Порт орбитального узла</small></div>
+      <div class="stat"><b>ATLAS-7</b><small>Автономный доставщик</small></div>
+      <div class="stat"><b>×3</b><small>Класса грузов</small></div>
+    </div>
+
+    <section style="margin-top:60px">
+      <p class="eyebrow">КАК ЭТО РАБОТАЕТ</p>
+      <h2>Три шага до доставки</h2>
+      <div class="steps">
+        <div class="step"><span>1</span><h3>Выберите груз</h3><p>Каталог независимых станций — от термоконтейнеров до гидропонных модулей.</p></div>
+        <div class="step"><span>2</span><h3>Оформите заказ</h3><p>Корзина с количествами, атомарный чекаут, мгновенное списание баланса.</p></div>
+        <div class="step"><span>3</span><h3>ATLAS-7 доставит</h3><p>Складской бот проведёт груз через все орбитальные стадии до статуса delivered.</p></div>
+      </div>
+    </section>
+
+    <div class="route-info">
+      <div><span>МАРШРУТ</span> SP-2049 · квадрант Северная Орбита</div>
+      <div><span>СВЯЗЬ</span> Канал Starpost защищён · АРМРФ</div>
+      <div><span>ДОСТАВКА</span> Бесплатно · за банку паштета</div>
+    </div>
+  </main>
+</body>
+</html>

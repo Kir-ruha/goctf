@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Вход — Starpost</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .auth-wrap { max-width: 460px; margin: 40px auto; }
+    .auth-card { border: 1px solid var(--line); border-radius: var(--r-lg); background: linear-gradient(145deg,#121f1b,var(--panel)); padding: 36px; box-shadow: var(--shadow-lg); }
+    .auth-card h1 { font-size: 2rem; margin: .1em 0 .4em; }
+    .auth-card form { max-width: none; }
+    .field { display: grid; gap: 6px; }
+    .field label { font: 700 .72rem 'JetBrains Mono', monospace; letter-spacing: .12em; color: var(--dim); text-transform: uppercase; }
+    .pass-row { position: relative; }
+    .pass-row input { padding-right: 80px; }
+    .pass-toggle { position: absolute; right: 6px; top: 6px; bottom: 6px; padding: 0 12px; font-size: .75rem; background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: var(--r-sm); }
+    .pass-toggle:hover { color: var(--ink); background: #ffffff08; transform: none; box-shadow: none; }
+    .auth-foot { text-align: center; margin-top: 18px; font-size: .88rem; }
+    .auth-foot a { color: var(--acid); text-decoration: none; }
+    .auth-foot a:hover { text-decoration: underline; }
+    .msg { min-height: 1.2em; margin-top: 6px; font-size: .88rem; color: var(--danger); }
+    .msg.ok { color: var(--acid); }
+  </style>
+</head>
+<body data-nav="static">
+  <header><a class="brand" href="/">STARPOST</a><nav><a href="/marketplace/">Маркетплейс</a><a href="/registr/">Регистрация</a></nav></header>
+  <main>
+    <div class="auth-wrap">
+      <p class="eyebrow" style="text-align:center">ШЛЮЗ АВТОРИЗАЦИИ — SP-2049</p>
+      <div class="auth-card">
+        <h1>Войти в систему</h1>
+        <p class="muted" style="margin-bottom:20px">Введите позывной и пароль для доступа к орбитальному маркетплейсу.</p>
+        <form id="login">
+          <div class="field"><label for="username">Позывной</label><input id="username" name="username" placeholder="star_rider" required autocomplete="username"></div>
+          <div class="field"><label for="password">Пароль</label><div class="pass-row"><input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password"><button type="button" class="pass-toggle" onclick="togglePass('password',this)">Показать</button></div></div>
+          <button style="margin-top:8px;width:100%;padding:14px">Войти →</button>
+          <p id="message" class="msg"></p>
+        </form>
+      </div>
+      <p class="auth-foot muted">Нет аккаунта? <a href="/registr/">Создать учётную запись</a></p>
+    </div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    function togglePass(id,btn){const i=document.getElementById(id);const h=i.type==='password';i.type=h?'text':'password';btn.textContent=h?'Скрыть':'Показать'}
+    document.getElementById('login').onsubmit=async e=>{
+      e.preventDefault();
+      const m=document.getElementById('message');m.textContent='';m.className='msg';
+      try{const d=Object.fromEntries(new FormData(e.target));const me=await api('/api/login',{method:'POST',body:JSON.stringify(d)});m.textContent='Вход выполнен ✓';m.className='msg ok';setTimeout(()=>location.href=me.role==='seller'?'/seller/':'/marketplace/',400)}catch(x){m.textContent=x.message}
+    };
+  </script>
+</body>
+</html>

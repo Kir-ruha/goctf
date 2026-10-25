@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Корзина | Starpost</title>
+  <link rel="stylesheet" href="/style.css?v=cart-3">
+  <link rel="stylesheet" href="/cart.css?v=cart-3">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">STARPOST</a>
+    <nav></nav>
+  </header>
+  <main>
+    <p class="eyebrow">ЛИЧНЫЙ АНГАР</p>
+    <h1>Корзина</h1>
+    <p data-user class="muted"></p>
+    <div class="cart-layout">
+      <section id="cart" class="cart-items"></section>
+      <aside class="checkout-card">
+        <h2>Ваш заказ</h2>
+        <div class="summary-row"><span>Товары, <b id="item-count">0</b> шт.</span><b id="subtotal">0 cr</b></div>
+        <div class="summary-row"><span>Орбитальная доставка</span><b class="free">Бесплатно</b></div>
+        <div class="summary-total"><span>Итого</span><b id="total">0 cr</b></div>
+        <button id="checkout">Оформить заказ</button>
+        <p class="muted">После оплаты ATLAS-7 передаст грузы в орбитальный маршрут.</p>
+      </aside>
+    </div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    let items = [];
+    const money = value => `${value} cr`;
+
+    async function load() {
+      if (!await guard("buyer")) return;
+      items = await api("/api/cart");
+      render();
+    }
+
+    function render() {
+      const count = items.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
+      const total = items.reduce((sum, item) => sum + item.price * Number(item.quantity || 1), 0);
+      $("#item-count").textContent = count;
+      $("#subtotal").textContent = money(total);
+      $("#total").textContent = money(total);
+      $("#checkout").disabled = !items.length;
+      $("#cart").innerHTML = items.map(item => `
+        <article class="cart-item">
+          <div class="cargo-mark">SP<br>${String(item.id).padStart(3, "0")}</div>
+          <div class="cart-item-info"><a href="/product/?id=${item.id}">${esc(item.name)}</a><p>${esc(item.seller)}</p><small>${esc(item.description)}</small></div>
+          <div class="quantity-control"><button aria-label="Уменьшить" onclick="changeQuantity(${item.id}, ${Number(item.quantity || 1) - 1})">−</button><span>${Number(item.quantity || 1)}</span><button aria-label="Увеличить" onclick="changeQuantity(${item.id}, ${Number(item.quantity || 1) + 1})">+</button></div>
+          <div class="cart-price"><b>${money(item.price * Number(item.quantity || 1))}</b><small>${money(item.price)} за шт.</small></div>
+          <button class="remove" aria-label="Удалить" onclick="removeItem(${item.id})">×</button>
+        </article>`).join("") || `<div class="empty-cart"><h2>Ваша корзина пуста</h2><p class="muted">Выберите нужное оборудование в торговом коридоре.</p><a class="button" href="/marketplace/">Перейти в каталог</a></div>`;
+    }
+
+    async function changeQuantity(id, quantity) {
+      if (quantity < 1) return removeItem(id);
+      if (quantity > 10) return;
+      try {
+        await api(`/api/cart/${id}`, {method: "PATCH", body: JSON.stringify({quantity})});
+        await load();
+      } catch (error) {
+        notify(error.message, "error");
+      }
+    }
+
+    async function removeItem(id) {
+      await api(`/api/cart/${id}`, {method: "DELETE"});
+      await load();
+    }
+
+    $("#checkout").onclick = async () => {
+      try {
+        const result = await api("/api/cart/checkout", {method: "POST", body: "{}"});
+        notify(`Заказ оформлен: ${result.orders.length} ед. передано складу ATLAS-7.`);
+        location.href = "/orders/";
+      } catch (error) {
+        notify(error.message, "error");
+      }
+    };
+
+    load();
+  </script>
+</body>
+</html>

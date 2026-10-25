@@ -1,0 +1,15 @@
+name: greenhouse
+
+services:
+  greenhouse:
+    platform: linux/amd64
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - greenhouse_data:/data
+    pids_limit: 256
+    mem_limit: 512m
+volumes:
+  greenhouse_data:

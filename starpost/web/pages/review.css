@@ -1,0 +1,79 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #020605cc;
+  backdrop-filter: blur(6px);
+}
+.modal-backdrop[hidden] { display: none; }
+
+.review-modal {
+  position: relative;
+  width: min(100%, 520px);
+  padding: 32px;
+  border: 1px solid #4a6658;
+  background: linear-gradient(145deg, #14251e, #0b1210);
+  box-shadow: 0 24px 80px #000b;
+}
+.review-modal h2 { margin: 8px 0; }
+
+.modal-close {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  padding: 2px 8px;
+  background: transparent;
+  color: var(--dim);
+  font-size: 1.7rem;
+}
+
+.rating-picker { display: flex; gap: 4px; margin: 24px 0 4px; }
+.rating-picker button {
+  padding: 4px;
+  background: transparent;
+  color: #52675d;
+  font-size: 2.3rem;
+  line-height: 1;
+}
+.rating-picker button.selected { color: var(--acid); }
+
+.rating-label {
+  height: 20px;
+  margin: 0;
+  color: var(--acid);
+  font-size: .85rem;
+}
+
+.review-modal textarea {
+  width: 100%;
+  margin: 18px 0;
+  min-height: 120px;
+}
+
+.private-toggle {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.private-toggle input { accent-color: var(--acid); }
+.private-toggle small { grid-column: 2; color: var(--dim); }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.secondary-button {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Личный кабинет | Starpost</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/account.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">STARPOST</a>
+    <nav></nav>
+  </header>
+  <main>
+    <p class="eyebrow">ЛИЧНЫЙ КАНАЛ · STARPOST ID</p>
+    <section id="profile" class="account-hero"><p class="muted">Загрузка профиля...</p></section>
+    <section id="stats" class="account-stats"></section>
+    <section class="account-grid">
+      <div class="account-panel"><p class="eyebrow">БЫСТРЫЙ ДОСТУП</p><h2>Ваши разделы</h2><div class="account-links"><a href="/marketplace/">Открыть маркетплейс <span>→</span></a><a href="/cart/">Перейти в корзину <span>→</span></a><a href="/orders/">Отследить заказы <span>→</span></a></div></div>
+      <div class="account-panel"><p class="eyebrow">ПРОФИЛЬ</p><h2>Данные аккаунта</h2><dl id="profile-data" class="profile-data"></dl><div id="promo-box"></div></div>
+    </section>
+    <section id="recent" class="account-panel recent-panel"></section>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    async function load() {
+      let data;
+      try {
+        data = await api("/api/account");
+      } catch (error) {
+        if (error.status === 401) location.href = "/login/";
+        else showAuthError("Не удалось загрузить кабинет. Повторите попытку через несколько секунд.");
+        return;
+      }
+      const user = data.user;
+      $("#profile").innerHTML = `<div class="avatar">${esc(user.username.slice(0, 1).toUpperCase())}</div><div><p class="eyebrow">${user.role === "buyer" ? "ПОКУПАТЕЛЬ" : "ПРОДАВЕЦ"}</p><h1>${esc(user.username)}</h1><p class="muted">На связи с орбитальным маркетплейсом Starpost</p></div><div class="balance"><small>ДОСТУПНЫЙ БАЛАНС</small><strong>${user.balance} cr</strong></div>`;
+      $("#profile-data").innerHTML = `<div><dt>Позывной</dt><dd>${esc(user.username)}</dd></div><div><dt>Роль</dt><dd>${user.role === "buyer" ? "Покупатель" : "Продавец"}</dd></div><div><dt>Дата регистрации</dt><dd>${new Date(user.created_at).toLocaleDateString("ru-RU")}</dd></div>${user.company_name ? `<div><dt>Компания</dt><dd>${esc(user.company_name)}</dd></div>` : ""}`;
+      if (user.role === "buyer") {
+        $("#stats").innerHTML = `<div><small>ЗАКАЗОВ</small><b>${data.stats.orders_count}</b></div><div><small>ДОСТАВЛЕНО</small><b>${data.stats.delivered_count}</b></div><div><small>ПОТРАЧЕНО</small><b>${data.stats.spent} cr</b></div><div><small>ОТЗЫВОВ</small><b>${data.reviews_count}</b></div>`;
+        $("#recent").innerHTML = `<p class="eyebrow">ПОСЛЕДНИЕ ДВИЖЕНИЯ</p><h2>Недавние заказы</h2>${data.recent_orders.map(order => `<div class="recent-order"><div><b>${esc(order.name)}</b><small>${esc(order.tracking_code)}</small></div><span class="status">${esc(order.status)}</span><strong>${order.price} cr</strong></div>`).join("") || `<p class="muted">Заказов пока нет. Перейдите в маркетплейс, чтобы выбрать груз.</p>`}`;
+        const promo = data.promo;
+        $("#promo-box").innerHTML = promo ? `<div class="promo-box"><p class="eyebrow">БОНУС STARPOST</p><h3>Промокод на 100 cr</h3><p class="muted">Активация выполняется двумя последовательными запросами.</p><div class="promo-row"><input id="promo-code" value="${esc(promo.code)}" readonly><button id="promo-activate">Активировать</button></div></div>` : "";
+        $("#promo-activate")?.addEventListener("click", activatePromo);
+      } else {
+        $("#stats").innerHTML = `<div><small>ТОВАРОВ</small><b>${data.stats.products_count}</b></div><div><small>АКТИВНЫХ</small><b>${data.stats.active_products_count}</b></div><div><small>ОТЗЫВОВ</small><b>${data.reviews_count}</b></div>`;
+        $("#recent").innerHTML = `<p class="eyebrow">РАЗДЕЛ СТАНЦИИ</p><h2>Управление магазином</h2><a class="button" href="/seller/">Открыть панель продавца</a>`;
+      }
+    }
+
+    async function activatePromo() {
+      const code = $("#promo-code").value;
+      try {
+        await api("/api/promo/credit", {method: "POST", body: JSON.stringify({code})});
+        await api("/api/promo/invalidate", {method: "POST", body: JSON.stringify({code})});
+        notify("На баланс начислено 100 cr. Промокод аннулирован.");
+        load();
+      } catch (error) { notify(error.message, "error"); }
+    }
+    load();
+  </script>
+</body>
+</html>

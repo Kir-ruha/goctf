@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Договор | Starpost</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header>
+        <a class="brand" href="/">STARPOST</a>
+        <nav></nav>
+    </header>
+
+    <main>
+        <p class="eyebrow">ЮРИДИЧЕСКИЙ ОТСЕК</p>
+        <h1>Договор станции</h1>
+        <p class="lead">
+            Подписанный договор хранится в защищенном архиве Starpost.
+        </p>
+
+        <a
+            id="contract-open"
+            class="button"
+            href="/api/contract"
+            target="_blank"
+            rel="noopener"
+        >
+            Открыть PDF-договор
+        </a>
+
+        <p id="contract-file" class="muted" style="margin-top:12px"></p>
+    </main>
+
+    <script src="/common.js"></script>
+    <script>
+        guard("seller").then(me => {
+            if (!me || !me.contract_file) return;
+
+            const link = document.getElementById("contract-open");
+            const hint = document.getElementById("contract-file");
+
+            link.href = "/api/contract?file=" + encodeURIComponent(me.contract_file);
+
+            if (hint) hint.textContent = me.contract_file;
+        });
+    </script>
+</body>
+</html>

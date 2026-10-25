@@ -1,0 +1,94 @@
+.product-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 440px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.product-main { flex: 1; padding: 22px; }
+.product-main small {
+  color: var(--acid);
+  font: 700 .7rem 'JetBrains Mono', monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.product-main h3 { margin: 6px 0 8px; }
+.product-main h3 a { color: var(--ink); text-decoration: none; }
+.product-main h3 a:hover { color: var(--acid); }
+.product-main .muted { font-size: .88rem; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.actions button { flex: 1 1 auto; }
+
+.card-reviews {
+  padding: 18px 22px;
+  border-top: 1px solid var(--line);
+  background: #0a1210;
+}
+.reviews-title,
+.public-review > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.reviews-title span { color: var(--acid); font: 700 .8rem monospace; }
+
+.public-review { padding: 12px 0; border-bottom: 1px solid #23342f; }
+.public-review:last-of-type { border-bottom: 0; }
+.public-review b,
+.public-review p { font-size: .84rem; }
+.public-review p { margin: 7px 0 0; color: var(--dim); line-height: 1.4; }
+
+.stars { color: var(--acid); letter-spacing: .05em; }
+
+/* Product detail page */
+.product-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 32px;
+  padding: 44px 0;
+}
+
+.purchase-panel {
+  align-self: start;
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+}
+
+.product-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 34px 0 0;
+}
+.product-meta div {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel2);
+}
+.product-meta dt { color: var(--dim); font-size: .72rem; }
+.product-meta dd { margin: 8px 0 0; }
+
+.detail-reviews { border-top: 1px solid var(--line); padding-top: 34px; }
+
+.detail-review {
+  max-width: 760px;
+  margin: 12px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
+}
+.detail-review > div { display: flex; justify-content: space-between; gap: 12px; }
+.detail-review p { color: var(--dim); line-height: 1.55; }
+
+@media (max-width: 760px) {
+  .product-detail, .product-meta { grid-template-columns: 1fr; }
+  .purchase-panel { position: static; }
+}

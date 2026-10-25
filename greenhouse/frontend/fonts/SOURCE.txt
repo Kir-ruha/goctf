@@ -1,0 +1,4 @@
+Departure Mono 1.500, unmodified WOFF2 from the official release.
+Source: https://github.com/rektdeckard/departure-mono/releases/download/v1.500/DepartureMono-1.500.zip
+License: SIL Open Font License 1.1; see DepartureMono-OFL.txt.
+DepartureMono-Regular.woff2 SHA256 5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb
